@@ -1,0 +1,11 @@
+version: '2'
+services:
+  app:
+    build:
+      context: .
+    working_dir: /go/src/rabbitmq-consumer
+    command: bash -c "go run main.go"
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 15672:15672
