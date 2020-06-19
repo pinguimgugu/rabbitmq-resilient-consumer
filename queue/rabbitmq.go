@@ -9,23 +9,23 @@ import (
 )
 
 type Rabbitmq struct {
-	host            string
-	user            string
-	pwd             string
-	port            int
-	conn            *amqp.Connection
-	connected       chan bool
-	unavailableConn chan bool
+	host      string
+	user      string
+	pwd       string
+	port      int
+	conn      *amqp.Connection
+	connected chan bool
+	lostConn  chan bool
 }
 
 func NewRabbitmq() *Rabbitmq {
 	return &Rabbitmq{
-		host:            "rabbitmq",
-		user:            "guest",
-		pwd:             "guest",
-		port:            5672,
-		connected:       make(chan bool),
-		unavailableConn: make(chan bool),
+		host:      "rabbitmq",
+		user:      "guest",
+		pwd:       "guest",
+		port:      5672,
+		connected: make(chan bool),
+		lostConn:  make(chan bool),
 	}
 }
 
@@ -60,7 +60,7 @@ func (r *Rabbitmq) handlerErrorNotification() error {
 	r.conn.NotifyClose(chanError)
 
 	<-chanError
-	r.unavailableConn <- true
+	r.lostConn <- true
 	return r.handerConnection()
 }
 
@@ -100,7 +100,7 @@ func (r *Rabbitmq) Consume() error {
 		}
 	}()
 
-	<-r.unavailableConn
+	<-r.lostConn
 	fmt.Println("> > Lost Conection :[ ")
 
 	return r.Consume()
